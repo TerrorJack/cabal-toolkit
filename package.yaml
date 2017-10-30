@@ -1,0 +1,29 @@
+name: cabal-toolkit
+version: 0.0.1
+category: Distribution
+synopsis: Helper functions for writing custom Setup.hs scripts.
+stability: alpha
+maintainer: Shao Cheng <astrohavoc@gmail.com>
+copyright: (c) 2017 Shao Cheng
+license: BSD3
+github: TerrorJack/cabal-toolkit
+
+extra-source-files:
+  - LICENSE
+  - README.md
+  - CHANGELOG.md
+
+ghc-options: -Wall
+
+dependencies:
+  - base >= 4.10 && < 5
+  - binary
+  - bytestring
+  - containers
+  - Cabal >= 2.0 && < 2.2
+  - template-haskell
+
+library:
+  source-dirs: src
+  other-extensions:
+    - TemplateHaskell

@@ -1,0 +1,18 @@
+version: 0.0.1.{build}
+
+shallow_clone: true
+
+cache:
+  - "%APPDATA%\\stack"
+  - .stack-work
+
+build_script:
+  - choco install haskell-stack
+  - stack --no-terminal setup > NUL
+  - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
+  - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
+  - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
+  - stack --no-terminal build --haddock --haddock-deps --test --no-run-tests --bench --no-run-benchmarks
+
+test_script:
+  - stack --no-terminal test
