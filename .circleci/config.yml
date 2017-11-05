@@ -1,0 +1,8 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: terrorjack/rakuen:nightly-2017-11-04
+    steps:
+      - checkout
+      - run: stack --no-terminal build --haddock
