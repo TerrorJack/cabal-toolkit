@@ -21,6 +21,7 @@ dependencies:
   - bytestring
   - containers
   - Cabal >= 2.0 && < 2.2
+  - ghc
   - template-haskell
 
 library:

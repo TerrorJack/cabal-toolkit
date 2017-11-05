@@ -13,8 +13,8 @@ Portability: non-portable
 This module provides helper functions for writing custom @Setup.hs@ scripts.
 -}
 
-module Distribution.Simple.Toolkit
-  ( -- * Writing build metadata in @Setup.hs@
+module Distribution.Simple.Toolkit (
+  -- * Writing build metadata in @Setup.hs@
     userHooksWithBuildInfo
   , simpleUserHooksWithBuildInfo
   , defaultMainWithBuildInfo
@@ -29,6 +29,8 @@ module Distribution.Simple.Toolkit
   , getGHCLibDir
   , runLBIProgram
   , getLBIProgramOutput
+  -- * Convenient functions for working with GHC API
+  , getGHCPackageDBFlags
   ) where
 
 import Data.Binary
@@ -42,6 +44,7 @@ import Distribution.Simple.Setup
 import Distribution.Types.BuildInfo
 import Distribution.Types.PackageDescription
 import Distribution.Verbosity
+import DynFlags
 import Language.Haskell.TH.Syntax
 import System.IO.Unsafe
 
@@ -51,14 +54,15 @@ They should be added to your project's @.gitignore@ file.
 Don't forget to edit the <https://cabal.readthedocs.io/en/latest/developing-packages.html#custom-setup-scripts custom-setup> stanza of your project's @.cabal@ file and add @cabal-toolkit@ to the dependencies.
 -}
 userHooksWithBuildInfo :: UserHooks -> UserHooks
-userHooksWithBuildInfo hooks =
-  hooks
+userHooksWithBuildInfo h =
+  h
   { postConf =
       \args flags pkg_descr lbi -> do
         encodeFile ".pkg_descr.buildinfo" pkg_descr
         encodeFile ".lbi.buildinfo" lbi
-        postConf hooks args flags pkg_descr lbi
+        postConf h args flags pkg_descr lbi
   }
+
 
 simpleUserHooksWithBuildInfo :: UserHooks
 simpleUserHooksWithBuildInfo = userHooksWithBuildInfo simpleUserHooks
@@ -141,3 +145,23 @@ getLBIProgramOutput lbi prog =
     (fromFlagOrDefault normal $ configVerbosity $ configFlags lbi)
     prog
     (withPrograms lbi)
+
+{-|
+Extract 'PackageDBFlag's from 'LocalBuildInfo' to put into the 'packageDBFlags' field of 'DynFlags'. This is useful to ensure the invocation of GHC API shares the same package databases (e.g. a @stack@ snapshot)
+-}
+getGHCPackageDBFlags :: LocalBuildInfo -> [PackageDBFlag]
+getGHCPackageDBFlags lbi =
+  reverse $
+  case withPackageDB lbi of
+    (GlobalPackageDB:UserPackageDB:dbs)
+      | all isSpecific dbs -> fmap single dbs
+    (GlobalPackageDB:dbs)
+      | all isSpecific dbs -> NoUserPackageDB : fmap single dbs
+    dbs -> ClearPackageDBs : fmap single dbs
+  where
+    single (SpecificPackageDB db) = PackageDB $ PkgConfFile db
+    single GlobalPackageDB = PackageDB GlobalPkgConf
+    single UserPackageDB = PackageDB UserPkgConf
+    isSpecific (SpecificPackageDB _) = True
+    isSpecific _ = False
+
