@@ -31,6 +31,10 @@ module Distribution.Simple.Toolkit (
   , getLBIProgramOutput
   -- * Convenient functions for working with GHC API
   , getGHCPackageDBFlags
+  -- * Extra 'Program's
+  , cmakeProgram
+  , makeProgram
+  , ninjaProgram
   ) where
 
 import Data.Binary
@@ -41,6 +45,7 @@ import Distribution.Simple
 import Distribution.Simple.LocalBuildInfo
 import Distribution.Simple.Program
 import Distribution.Simple.Setup
+import Distribution.System
 import Distribution.Types.BuildInfo
 import Distribution.Types.PackageDescription
 import Distribution.Verbosity
@@ -165,3 +170,23 @@ getGHCPackageDBFlags lbi =
     isSpecific (SpecificPackageDB _) = True
     isSpecific _ = False
 
+endOfFirstLineVersion :: Verbosity -> FilePath -> IO (Maybe Version)
+endOfFirstLineVersion =
+  findProgramVersion "--version" $ last . words . head . lines
+
+cmakeProgram :: Program
+cmakeProgram =
+  (simpleProgram "cmake") {programFindVersion = endOfFirstLineVersion}
+
+makeProgram :: Program
+makeProgram =
+  (simpleProgram $
+   case buildOS of
+     Windows -> "mingw32-make"
+     _ -> "make")
+  {programFindVersion = endOfFirstLineVersion}
+
+ninjaProgram :: Program
+ninjaProgram =
+  (simpleProgram "ninja")
+  {programFindVersion = findProgramVersion "--version" id}
