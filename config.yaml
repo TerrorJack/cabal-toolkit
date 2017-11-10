@@ -1,0 +1,8 @@
+build:
+  prefetch: true
+allow-newer: true
+setup-info:
+  ghc:
+    windows64:
+      8.2.1.20171108:
+        url: https://downloads.haskell.org/~ghc/8.2.2-rc3/ghc-8.2.1.20171108-x86_64-unknown-mingw32.tar.xz

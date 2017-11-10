@@ -4,21 +4,17 @@ shallow_clone: true
 
 image: Visual Studio 2017
 
-cache:
-  - "%APPDATA%\\stack"
-  - .stack-work
-
 build_script:
   - choco install haskell-stack
-  - stack --no-terminal setup > NUL
-  - rmdir /s /q %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\msys2-20150512
-  - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\msys2-20150512 C:\\msys64
-  - rmdir /S /Q %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1\\mingw
-  - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1\\mingw C:\\msys64\\mingw64
-  - rmdir /S /Q %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1\\perl
-  - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1\\perl C:\\msys64\\usr\\bin
-  - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
-  - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
+  - if not exist "%APPDATA%\\stack" mkdir "%APPDATA%\\stack"
+  - copy config.yaml "%APPDATA%\\stack"
+  - stack --no-terminal --skip-msys setup > NUL
+  - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\msys2-20161025 C:\\msys64
+  - copy %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1.20171108.installed %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\msys2-20161025.installed
+  - rmdir /S /Q %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1.20171108\\mingw
+  - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1.20171108\\mingw C:\\msys64\\mingw64
+  - rmdir /S /Q %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1.20171108\\perl
+  - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1.20171108\\perl C:\\msys64\\usr\\bin
   - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
   - stack --no-terminal build --haddock
 
