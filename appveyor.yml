@@ -17,5 +17,6 @@ build_script:
   - mklink /D %LOCALAPPDATA%\\Programs\\stack\\x86_64-windows\\ghc-8.2.1.20171108\\perl C:\\msys64\\usr\\bin
   - stack --no-terminal exec pacman -- -Syu --force --noconfirm --noprogressbar
   - stack --no-terminal build --haddock
+  - stack --no-terminal build --haddock --stack-yaml=stack-lts-9.yaml
 
 test: off

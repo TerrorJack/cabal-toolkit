@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-deprecations #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
@@ -45,9 +46,11 @@ import Distribution.Simple
 import Distribution.Simple.LocalBuildInfo
 import Distribution.Simple.Program
 import Distribution.Simple.Setup
+#if !MIN_VERSION_Cabal(2,0,0)
+import qualified Distribution.Simple.InstallDirs as InstallDirs
+#endif
 import Distribution.System
-import Distribution.Types.BuildInfo
-import Distribution.Types.PackageDescription
+import Distribution.PackageDescription
 import Distribution.Verbosity
 import DynFlags
 import Language.Haskell.TH.Syntax
@@ -103,6 +106,23 @@ localBuildInfoQ = syringe ".lbi.buildinfo" [t|LocalBuildInfo|]
 localBuildInfoTypedQ :: Q (TExp LocalBuildInfo)
 localBuildInfoTypedQ = unsafeTExpCoerce localBuildInfoQ
 
+#if !MIN_VERSION_Cabal(2,0,0)
+-- | As defined in @Cabal-2.0.0.2@. See 'Distribution.Simple.InstallDirs.absoluteInstallDirs'.
+absoluteComponentInstallDirs 
+  :: PackageDescription -> LocalBuildInfo
+  -> UnitId
+  -> CopyDest
+  -> InstallDirs FilePath
+absoluteComponentInstallDirs pkg lbi uid copydest =
+  InstallDirs.absoluteInstallDirs
+  (packageId pkg)
+  uid
+  (Distribution.Simple.compilerInfo (compiler lbi))
+  copydest
+  (hostPlatform lbi)
+  (installDirTemplates lbi)
+#endif
+
 {-|
 Retrieve the 'InstallDirs' corresponding to a 'ComponentName', assuming that component does exist and is unique.
 -}
@@ -151,8 +171,11 @@ getLBIProgramOutput lbi prog =
     prog
     (withPrograms lbi)
 
+
+#if MIN_VERSION_Cabal(2,0,0)
 {-|
-Extract 'PackageDBFlag's from 'LocalBuildInfo' to put into the 'packageDBFlags' field of 'DynFlags'. This is useful to ensure the invocation of GHC API shares the same package databases (e.g. a @stack@ snapshot)
+Extract 'PackageDBFlag's from 'LocalBuildInfo' to put into the 'packageDBFlags' field of 'DynFlags'. 
+This is useful to ensure the invocation of GHC API shares the same package databases (e.g. a @stack@ snapshot)
 -}
 getGHCPackageDBFlags :: LocalBuildInfo -> [PackageDBFlag]
 getGHCPackageDBFlags lbi =
@@ -169,6 +192,21 @@ getGHCPackageDBFlags lbi =
     single UserPackageDB = PackageDB UserPkgConf
     isSpecific (SpecificPackageDB _) = True
     isSpecific _ = False
+#else
+-- 'PackageDBFlag' is a new wrapper around 'PkgConfRef' introduced in ghc-8.2.1 and Cabal-2.
+-- ghc-8.0.2/Cabal-1.24 has a similar mechanism around 'extraPkgConfs' which was superseded
+-- by 'packageDBFlags'.
+{-|
+Extract 'PkgConfRef's from 'LocalBuildInfo' to be prepended to the 'extraPkgConfs' field of 'DynFlags'. 
+This is useful to ensure the invocation of GHC API shares the same package databases (e.g. a @stack@ snapshot)
+-}
+getGHCPackageDBFlags :: LocalBuildInfo -> [PkgConfRef]
+getGHCPackageDBFlags = reverse . fmap toPkgConfRef . withPackageDB
+  where
+    toPkgConfRef (SpecificPackageDB db) = PkgConfFile db
+    toPkgConfRef GlobalPackageDB = GlobalPkgConf
+    toPkgConfRef UserPackageDB = UserPkgConf
+#endif
 
 endOfFirstLineVersion :: Verbosity -> FilePath -> IO (Maybe Version)
 endOfFirstLineVersion =
