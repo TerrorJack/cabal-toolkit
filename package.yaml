@@ -2,6 +2,7 @@ name: cabal-toolkit
 version: 0.0.4
 category: Distribution
 synopsis: Helper functions for writing custom Setup.hs scripts.
+description: Helper functions for writing custom Setup.hs scripts.
 stability: alpha
 maintainer: Shao Cheng <astrohavoc@gmail.com>
 copyright: (c) 2017 Shao Cheng
