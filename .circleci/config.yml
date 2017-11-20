@@ -6,4 +6,4 @@ jobs:
     steps:
       - checkout
       - run: stack --no-terminal build --haddock
-      - run: stack --no-terminal build --haddock --stack-yaml=stack-lts-9.yaml
+      - run: stack --no-terminal --install-ghc build --haddock --stack-yaml=stack-lts-9.yaml
