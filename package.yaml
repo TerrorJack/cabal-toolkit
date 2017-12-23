@@ -2,7 +2,12 @@ name: cabal-toolkit
 version: 0.0.4
 category: Distribution
 synopsis: Helper functions for writing custom Setup.hs scripts.
-description: Helper functions for writing custom Setup.hs scripts.
+description: |
+  Helper functions for writing custom Setup.hs scripts.
+  .
+  This is useful to access configuration parameters of a @Cabal@-based project
+  at runtime, e.g. when you want to supply the right
+  @GHC_PACKAGE_PATH@ to @ghc@ oder @ghci@.
 stability: alpha
 maintainer: Shao Cheng <astrohavoc@gmail.com>
 copyright: (c) 2017 Shao Cheng
