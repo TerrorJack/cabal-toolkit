@@ -1,5 +1,5 @@
 name: cabal-toolkit
-version: 0.0.4
+version: 0.0.5
 category: Distribution
 synopsis: Helper functions for writing custom Setup.hs scripts.
 description: |

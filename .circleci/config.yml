@@ -2,8 +2,9 @@ version: 2
 jobs:
   build:
     docker:
-      - image: terrorjack/rakuen:nightly-2017-11-09
+      - image: terrorjack/vanilla:haskell
     steps:
       - checkout
-      - run: stack --no-terminal build --haddock
-      - run: stack --no-terminal --install-ghc build --haddock --stack-yaml=stack-lts-9.yaml
+      - run: |
+          stack --nix --no-terminal build --haddock
+          stack --nix --no-terminal build --haddock --stack-yaml=stack-lts-9.yaml

@@ -80,6 +80,7 @@ defaultMainWithBuildInfo = defaultMainWithHooks simpleUserHooksWithBuildInfo
 
 syringe :: FilePath -> Q Type -> Q Exp
 syringe p t = do
+  addDependentFile p
   buf <- runIO $ LBS.readFile p
   [|unsafePerformIO $ do
       bs <-
