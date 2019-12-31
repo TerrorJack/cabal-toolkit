@@ -1,5 +1,5 @@
 name: cabal-toolkit
-version: 0.0.5
+version: 0.0.6
 category: Distribution
 synopsis: Helper functions for writing custom Setup.hs scripts.
 description: |
@@ -26,7 +26,7 @@ dependencies:
   - binary
   - bytestring
   - containers
-  - Cabal >= 1.24 && < 2.2
+  - Cabal >= 1.24 && < 4
   - ghc
   - template-haskell
 
