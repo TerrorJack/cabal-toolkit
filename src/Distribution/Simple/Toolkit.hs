@@ -41,7 +41,9 @@ module Distribution.Simple.Toolkit (
 import Data.Binary
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Unsafe as BS
-import Data.Map
+import qualified Data.Map as Map
+import Data.List (intercalate)
+import Distribution.Text
 import Distribution.Simple
 import Distribution.Simple.LocalBuildInfo
 import Distribution.Simple.Program
@@ -109,7 +111,7 @@ localBuildInfoTypedQ = unsafeTExpCoerce localBuildInfoQ
 
 #if !MIN_VERSION_Cabal(2,0,0)
 -- | As defined in @Cabal-2.0.0.2@. See 'Distribution.Simple.InstallDirs.absoluteInstallDirs'.
-absoluteComponentInstallDirs 
+absoluteComponentInstallDirs
   :: PackageDescription -> LocalBuildInfo
   -> UnitId
   -> CopyDest
@@ -122,6 +124,23 @@ absoluteComponentInstallDirs pkg lbi uid copydest =
   copydest
   (hostPlatform lbi)
   (installDirTemplates lbi)
+#endif
+
+#if MIN_VERSION_Cabal(3,0,0)
+-- getComponentLocalBuildInfo was removed in Cabal 3.
+-- We simply define our own variant with the same flaws here,
+-- but in terms of Cabal 3 definitions.
+getComponentLocalBuildInfo :: LocalBuildInfo -> ComponentName -> ComponentLocalBuildInfo
+getComponentLocalBuildInfo lbi cname =
+    case Map.lookup cname (componentNameMap lbi) of
+      Just [clbi] -> clbi
+      Just clbis  ->
+          error $ "internal error: the component name " ++ show cname
+               ++ "is ambiguous.  Refers to: "
+               ++ intercalate ", " (fmap (display . componentUnitId) clbis)
+      Nothing ->
+          error $ "internal error: there is no configuration data "
+               ++ "for component " ++ show cname
 #endif
 
 {-|
@@ -150,7 +169,7 @@ getComponentBuildInfo pkg_descr k =
 Equivalent to what you get from @ghc --print-libdir@.
 -}
 getGHCLibDir :: LocalBuildInfo -> FilePath
-getGHCLibDir lbi = compilerProperties (compiler lbi) ! "LibDir"
+getGHCLibDir lbi = compilerProperties (compiler lbi) Map.! "LibDir"
 
 {-|
 Run a 'Program' with default 'Verbosity'.
@@ -175,7 +194,7 @@ getLBIProgramOutput lbi prog =
 
 #if MIN_VERSION_Cabal(2,0,0)
 {-|
-Extract 'PackageDBFlag's from 'LocalBuildInfo' to put into the 'packageDBFlags' field of 'DynFlags'. 
+Extract 'PackageDBFlag's from 'LocalBuildInfo' to put into the 'packageDBFlags' field of 'DynFlags'.
 This is useful to ensure the invocation of GHC API shares the same package databases (e.g. a @stack@ snapshot)
 -}
 getGHCPackageDBFlags :: LocalBuildInfo -> [PackageDBFlag]
@@ -198,7 +217,7 @@ getGHCPackageDBFlags lbi =
 -- ghc-8.0.2/Cabal-1.24 has a similar mechanism around 'extraPkgConfs' which was superseded
 -- by 'packageDBFlags'.
 {-|
-Extract 'PkgConfRef's from 'LocalBuildInfo' to be prepended to the 'extraPkgConfs' field of 'DynFlags'. 
+Extract 'PkgConfRef's from 'LocalBuildInfo' to be prepended to the 'extraPkgConfs' field of 'DynFlags'.
 This is useful to ensure the invocation of GHC API shares the same package databases (e.g. a @stack@ snapshot)
 -}
 getGHCPackageDBFlags :: LocalBuildInfo -> [PkgConfRef]
